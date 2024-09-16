@@ -1,13 +1,23 @@
+import { formatPhoneNumber, capitalize } from "./utils/transformations";
+
 export const InfoRow = ({ label, value }) => {
+  const isFirstOrLast =
+    label === "First Name"
+      ? capitalize(value)
+      : value || label === "Last Name"
+      ? capitalize(value)
+      : value;
+
   return (
     <div>
       <span style={{ marginRight: 5 }}>
         <b>{label}:</b>
       </span>
-      <span>{value}</span>
+      <span>{isFirstOrLast}</span>
     </div>
   );
 };
+
 export const ProfileInformation = ({ userData }) => {
   if (!userData) {
     return (
@@ -21,8 +31,9 @@ export const ProfileInformation = ({ userData }) => {
       </>
     );
   }
-  // eslint-disable-next-line no-unused-vars
-  const { email, firstName, lastName, phone: _phone, city } = userData;
+
+  const { email, firstName, lastName, phone, city } = userData;
+  const sluggedPhone = formatPhoneNumber(phone);
   return (
     <>
       <u>
@@ -33,8 +44,7 @@ export const ProfileInformation = ({ userData }) => {
         <InfoRow label="First Name" value={firstName} />
         <InfoRow label="Last Name" value={lastName} />
         <InfoRow label="City" value={city} />
-        {/* You will need to format the string "nnnnnnn" as "nn-nn-nn-n" */}
-        <InfoRow label="Phone" value={"12-34-56-7"} />
+        <InfoRow label="Phone" value={sluggedPhone} />
       </div>
     </>
   );

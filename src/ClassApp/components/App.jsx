@@ -1,7 +1,7 @@
 import "./App.css";
-import { ClassApp } from "./ClassApp/components/ClassApp";
-import { FunctionalApp } from "./FunctionalApp/FunctionalApp";
-import { allCities } from "./utils/all-cities";
+import { ClassApp } from "../ClassApp";
+import { FunctionalApp } from "../../FunctionalApp/components/FunctionalApp";
+import { allCities } from "../../utils/all-cities";
 
 function App() {
   return (
