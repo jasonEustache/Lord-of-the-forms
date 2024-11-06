@@ -17,8 +17,8 @@ export const FunctionalTextInput = ({ props }) => {
       <div className="input-wrap">
         <label>{label}:</label>
         <input
-          type={type ? type : null}
-          list={list ? list : null}
+          type={type ? type : ""}
+          list={list ? list : ""}
           placeholder={placeHolder}
           value={value}
           onChange={handleOnChange}

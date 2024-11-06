@@ -4,123 +4,90 @@ import { formatPhoneNumber } from "../../utils/transformations";
 import { FunctionalTextInput } from "./FunctionalTextInput";
 
 import {
-  isThisAFirst,
-  isThisALast,
-  isThisANumber,
-  isThisACity,
-  isThisAEmail,
+  isNameValid,
+  isNumberValid,
+  isCityValid,
+  isEmailValid,
 } from "../../utils/validations";
 import { FunctionalPhoneInput } from "./FunctionalPhoneInput";
 import { DisplayErrorMessage } from "../../ErrorMessage";
 import { userContentErrors } from "../../utils/userContentError";
 
 export const FunctionalForm = (props) => {
-  const setUserInformation = props.setUserInformation;
+  const setUser = props.setUser;
+
   const [ref1, ref2, ref3, ref4] = [
-    useRef(null),
-    useRef(null),
-    useRef(null),
-    useRef(null),
+    useRef(""),
+    useRef(""),
+    useRef(""),
+    useRef(""),
   ];
-  const user = {
-    firstName: "",
-    lastName: "",
-    email: "",
-    city: "",
-    phone: ["", "", "", ""],
-  };
 
   // State
-  const [finalUserInput, setFinalUserInput] = useState(user);
-  const [validations, setValidations] = useState({});
-  const { city, email, firstName, lastName, phone } = finalUserInput;
-
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [city, setCity] = useState("");
+  const [phone, setPhone] = useState(["", "", "", ""]);
+  const [notValid, setNotValid] = useState(false);
   //conditions
-  const userInfoValidation = {
-    firstName: isThisAFirst(firstName),
-    lastName: isThisALast(lastName),
-    email: isThisAEmail(email),
-    city: isThisACity(city, allCities),
-    phone: isThisANumber(formatPhoneNumber(phone)),
-    display: "display",
+  const validations = {
+    first: isNameValid(firstName),
+    last: isNameValid(lastName),
+    email: isEmailValid(email),
+    city: isCityValid(city, allCities),
+    phone: isNumberValid(formatPhoneNumber(phone)),
   };
-  const isThisAFirstName_ = !validations.firstName;
-  const isThisALastName_ = !validations.lastName;
-  const isThisACity_ = !validations.city;
-  const isThisAEmail_ = !validations.email;
-  const isThisAPhone_ = !userInfoValidation.phone;
+
+  const firstNameError = !validations.first;
+  const lastNameError = !validations.last;
+  const cityError = !validations.city;
+  const emailError = !validations.email;
+  const numberError = !validations.phone;
 
   //onsubmit
   const handleOnSubmit = (e) => {
     e.preventDefault();
-    const shouldNotSubmitInformation =
-      Object.values(userInfoValidation).includes(false);
-    if (shouldNotSubmitInformation) {
+    if (Object.values(validations).includes(false)) {
       alert("bad Input Data");
-      setValidations(userInfoValidation);
+      setNotValid(true);
     } else {
-      setUserInformation({ ...finalUserInput });
-      setFinalUserInput({ ...user });
-      setValidations({});
+      setUser({
+        firstName,
+        lastName,
+        email,
+        city,
+        phone,
+      });
+      setNotValid(false);
+      setFirstName("");
+      setLastName("");
+      setCity("");
+      setEmail("");
+      setPhone(["", "", "", ""]);
     }
   };
+
   //onChangeFirst
   const handleOnChangeFirst = (e) => {
-    setFinalUserInput({
-      ...finalUserInput,
-      firstName: e.target.value,
-    });
-    isThisAFirst(e.target.value);
-
-    if (validations.display?.length > 0) {
-      setValidations({
-        ...validations,
-        firstName: isThisAFirst(e.target.value),
-      });
-    }
+    setFirstName(e.target.value);
   };
+
   //onChangeLast
   const handleOnChangeLast = (e) => {
-    setFinalUserInput({
-      ...finalUserInput,
-      lastName: e.target.value,
-    });
-
-    if (validations.display?.length > 0) {
-      setValidations({
-        ...validations,
-        lastName: isThisALast(e.target.value),
-      });
-    }
+    setLastName(e.target.value);
   };
+
   //onChangeEmail
   const handleOnChangeEmail = (e) => {
-    setFinalUserInput({
-      ...finalUserInput,
-      email: e.target.value,
-    });
-
-    if (validations.display?.length > 0) {
-      setValidations({
-        ...validations,
-        email: isThisAEmail(e.target.value),
-      });
-    }
+    setEmail(e.target.value);
   };
+
   //onChangeCity
   const handleOnChangeCity = (e) => {
-    setFinalUserInput({
-      ...finalUserInput,
-      city: e.target.value,
-    });
-
-    if (validations.display?.length > 0) {
-      setValidations({
-        ...validations,
-        city: isThisACity(e.target.value, allCities),
-      });
-    }
+    setCity(e.target.value);
   };
+
   // onChangePhone
   const handleOnChangePhone = (staticPhoneIndex) => {
     return (e) => {
@@ -136,8 +103,7 @@ export const FunctionalForm = (props) => {
           currentInputMax === value.length && nextInput?.current;
         const shouldGoToPrev = value.length === 0 && previousInput?.current;
         currentInput.current.maxLength = currentInputMax;
-
-        const updateUserInput = phone.map((phoneInput, indexInput) => {
+        const newPhoneInput = phone.map((phoneInput, indexInput) => {
           return staticPhoneIndex === indexInput ? e.target.value : phoneInput;
         });
 
@@ -149,17 +115,7 @@ export const FunctionalForm = (props) => {
           previousInput.current.focus();
         }
 
-        setFinalUserInput({
-          ...finalUserInput,
-          phone: updateUserInput,
-        });
-
-        if (validations.display?.length > 0) {
-          setValidations({
-            ...validations,
-            phone: isThisANumber(e.target.value),
-          });
-        }
+        setPhone(newPhoneInput);
       }
     };
   };
@@ -173,31 +129,30 @@ export const FunctionalForm = (props) => {
         props={{
           label: "First Name",
           placeHolder: "Bilbo",
-          value: finalUserInput.firstName,
+          value: firstName,
           handleOnChange: handleOnChangeFirst,
-          errorMessage: userContentErrors[0].name,
-          showError:
-            validations.display?.length > 0 ? isThisAFirstName_ : false,
+          errorMessage: userContentErrors[0].firstError,
+          showError: notValid ? firstNameError : notValid,
         }}
       />
       <FunctionalTextInput
         props={{
           label: "Last Name",
           placeHolder: "Baggins",
-          value: finalUserInput.lastName,
+          value: lastName,
           handleOnChange: handleOnChangeLast,
-          errorMessage: userContentErrors[1].last,
-          showError: validations.display?.length > 0 ? isThisALastName_ : false,
+          errorMessage: userContentErrors[1].lastError,
+          showError: notValid ? lastNameError : notValid,
         }}
       />
       <FunctionalTextInput
         props={{
           label: "Email",
           placeHolder: "bilbo-baggins@adventurehobbits.net",
-          value: finalUserInput.email,
+          value: email,
           handleOnChange: handleOnChangeEmail,
-          errorMessage: userContentErrors[2].email,
-          showError: validations.display?.length > 0 ? isThisAEmail_ : false,
+          errorMessage: userContentErrors[2].emailError,
+          showError: notValid ? emailError : notValid,
         }}
       />
       <FunctionalTextInput
@@ -206,10 +161,10 @@ export const FunctionalForm = (props) => {
           type: "text",
           list: "cities",
           placeHolder: "Hobbiton",
-          value: finalUserInput.city,
+          value: city,
           handleOnChange: handleOnChangeCity,
-          errorMessage: userContentErrors[3].city,
-          showError: validations.display?.length > 0 ? isThisACity_ : false,
+          errorMessage: userContentErrors[3].cityError,
+          showError: notValid ? cityError : notValid,
         }}
       />
       <div className="input-wrap">
@@ -257,8 +212,8 @@ export const FunctionalForm = (props) => {
         </div>
       </div>
       <DisplayErrorMessage
-        message={userContentErrors[4].number}
-        show={validations.display?.length > 0 ? isThisAPhone_ : false}
+        message={userContentErrors[4].numberError}
+        show={notValid ? numberError : notValid}
       />
       <input type="submit" value="Submit" />
     </form>

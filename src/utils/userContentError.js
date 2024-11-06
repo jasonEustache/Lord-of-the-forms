@@ -1,13 +1,17 @@
-const firstNameErrorMessage = "First name must be at least 2 characters long";
-const lastNameErrorMessage = "Last name must be at least 2 characters long";
-const emailErrorMessage = "Email is Invalid";
-const cityErrorMessage = "State is Invalid";
-const phoneNumberErrorMessage = "Invalid Phone Number";
-
 export const userContentErrors = [
-  { name: firstNameErrorMessage, show: false },
-  { last: lastNameErrorMessage, show: false },
-  { email: emailErrorMessage, show: false },
-  { city: cityErrorMessage, show: false },
-  { number: phoneNumberErrorMessage, show: false },
+  {
+    firstError:
+      "First name must be at least 2 characters long and should have no numbers",
+  },
+  {
+    lastError:
+      "Last name must be at least 2 characters long and should have no numbers",
+  },
+  {
+    emailError: "Email is Invalid and should be in traditional format",
+  },
+  {
+    cityError: "State is Invalid. Must be existing inside of data list",
+  },
+  { numberError: "Invalid Phone Number must have a length of 10" },
 ];

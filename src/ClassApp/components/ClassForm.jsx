@@ -2,13 +2,12 @@ import { Component, createRef } from "react";
 import { DisplayErrorMessage } from "../../ErrorMessage";
 import { ClassPhoneInput } from "./ClassPhoneInput";
 import { ClassTextInput } from "./classTextInput";
-import { classUserContentError } from "../../utils/classUserContentError";
+import { userContentErrors } from "../../utils/userContentError";
 import {
-  isThisAFirst,
-  isThisALast,
-  isThisACity,
-  isThisAEmail,
-  isThisANumber,
+  isNameValid,
+  isNumberValid,
+  isCityValid,
+  isEmailValid,
 } from "../../utils/validations";
 import { formatPhoneNumber } from "../../utils/transformations";
 import { allCities } from "../../utils/all-cities";
@@ -17,134 +16,85 @@ export class ClassForm extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      validations: {},
-      finalUserInput: {
-        firstName: "",
-        lastName: "",
-        email: "",
-        city: "",
-        phone: ["", "", "", ""],
-      },
-    };
-    this.user = {
       firstName: "",
       lastName: "",
       email: "",
       city: "",
       phone: ["", "", "", ""],
+      notValid: false,
     };
   }
 
-  updateValidations = (value) => {
+  userUpdate = (value) => {
     return this.setState(value);
   };
-  updateFinalUserInput = (value) => {
-    return this.setState(value);
-  };
-  render() {
-    const validations = this.state.validations;
-    const finalUserInput = this.state.finalUserInput;
-    //conditions
-    const { firstName, lastName, email, city, phone } =
-      this.state.finalUserInput;
 
-    const userInfoValidation = {
-      firstName: isThisAFirst(firstName),
-      lastName: isThisALast(lastName),
-      email: isThisAEmail(email),
-      city: isThisACity(city, allCities),
-      phone: isThisANumber(formatPhoneNumber(phone)),
-      display: "display",
+  render() {
+    const userUpdate = this.userUpdate;
+    const setUser = this.props.setUser;
+    const firstName = this.state.firstName;
+    const lastName = this.state.lastName;
+    const city = this.state.city;
+    const email = this.state.email;
+    const phone = this.state.phone;
+    const notValid = this.state.notValid;
+
+    //conditions
+
+    const validations = {
+      firstName: isNameValid(firstName),
+      lastName: isNameValid(lastName),
+      email: isEmailValid(email),
+      city: isCityValid(city, allCities),
+      phone: isNumberValid(formatPhoneNumber(phone)),
     };
 
-    const isThisAFirstName_ = !this.state.validations.firstName;
-    const isThisALastName_ = !this.state.validations.lastName;
-    const isThisACity_ = !this.state.validations.city;
-    const isThisAEmail_ = !this.state.validations.email;
-    const isThisAPhone_ = !this.state.validations.phone;
+    const firstNameError = !validations.firstName;
+    const lastNameError = !validations.lastName;
+    const cityError = !validations.city;
+    const emailError = !validations.email;
+    const phoneError = !validations.phone;
 
     //onsubmit
     const handleOnSubmit = (e) => {
       e.preventDefault();
-      const shouldNotSubmitInformation =
-        Object.values(userInfoValidation).includes(false);
-      if (shouldNotSubmitInformation) {
-        alert("bad Input Data");
-        this.updateValidations({ validations: userInfoValidation });
-      } else {
-        this.props.setFinal({ final: finalUserInput });
-        this.updateFinalUserInput({ finalUserInput: this.user });
-        this.updateValidations({ validations: {} });
-      }
-    };
-    //onChangeFirst
-    const handleOnChangeFirst = (e) => {
-      this.updateFinalUserInput({
-        finalUserInput: {
-          ...finalUserInput,
-          firstName: e.target.value,
-        },
-      });
 
-      if (this.state.validations.display?.length > 0) {
-        this.updateValidations({
-          validations: {
-            ...validations,
-            firstName: isThisAFirst(e.target.value),
-          },
+      if (Object.values(validations).includes(false)) {
+        alert("bad Input Data");
+        userUpdate({ notValid: true });
+      } else {
+        setUser({
+          final: { firstName, lastName, email, city, phone },
+        });
+        setUser({
+          done: true,
+        });
+        userUpdate({
+          firstName: "",
+          lastName: "",
+          email: "",
+          city: "",
+          phone: ["", "", "", ""],
+          notValid: false,
         });
       }
+    };
+
+    //onChangeFirst
+    const handleOnChangeFirst = (e) => {
+      userUpdate({ firstName: e.target.value });
     };
     //onChangeLast
     const handleOnChangeLast = (e) => {
-      this.updateFinalUserInput({
-        finalUserInput: {
-          ...finalUserInput,
-          lastName: e.target.value,
-        },
-      });
-      if (this.state.validations.display?.length > 0) {
-        this.updateValidations({
-          validations: {
-            ...validations,
-            lastName: isThisALast(e.target.value),
-          },
-        });
-      }
+      userUpdate({ lastName: e.target.value });
     };
     //onChangeEmail
     const handleOnChangeEmail = (e) => {
-      this.updateFinalUserInput({
-        finalUserInput: {
-          ...finalUserInput,
-          email: e.target.value,
-        },
-      });
-      if (this.state.validations.display?.length > 0) {
-        this.updateValidations({
-          validations: {
-            ...validations,
-            email: isThisAEmail(e.target.value),
-          },
-        });
-      }
+      userUpdate({ email: e.target.value });
     };
     //onChangeCity
     const handleOnChangeCity = (e) => {
-      this.updateFinalUserInput({
-        finalUserInput: {
-          ...finalUserInput,
-          city: e.target.value,
-        },
-      });
-      if (this.state.validations.display?.length > 0) {
-        this.updateValidations({
-          validations: {
-            ...validations,
-            city: isThisALast(e.target.value),
-          },
-        });
-      }
+      userUpdate({ city: e.target.value });
     };
     // onChangePhone
     const [ref1, ref2, ref3, ref4] = [
@@ -170,7 +120,7 @@ export class ClassForm extends Component {
           const shouldGoToPrev = value.length === 0 && previousInput?.current;
           currentInput.current.maxLength = currentInputMax;
 
-          const updateUserInput = phone.map((phoneInput, indexInput) => {
+          const newPhoneInput = phone.map((phoneInput, indexInput) => {
             return staticPhoneIndex === indexInput
               ? e.target.value
               : phoneInput;
@@ -183,28 +133,13 @@ export class ClassForm extends Component {
           if (shouldGoToPrev) {
             previousInput.current.focus();
           }
-
-          this.updateFinalUserInput({
-            finalUserInput: {
-              ...finalUserInput,
-              phone: updateUserInput,
-            },
-          });
-
-          if (this.state.validations.display?.length > 0) {
-            this.updateValidations({
-              validations: {
-                ...validations,
-                phone: isThisANumber(e.target.value),
-              },
-            });
-          }
+          userUpdate({ phone: newPhoneInput });
         }
       };
     };
 
     return (
-      <form onSubmit={handleOnSubmit}>
+      <form onSubmit={handleOnSubmit} id="class-form">
         <u>
           <h3>User Information Form</h3>
         </u>
@@ -214,11 +149,8 @@ export class ClassForm extends Component {
             placeHolder: "Bilbo",
             onChange: handleOnChangeFirst,
             value: firstName,
-            errorMessage: classUserContentError[0].name,
-            showError:
-              this.state.validations.display?.length > 0
-                ? isThisAFirstName_
-                : false,
+            errorMessage: userContentErrors[0].firstError,
+            showError: notValid ? firstNameError : notValid,
           }}
         />
         <ClassTextInput
@@ -227,11 +159,8 @@ export class ClassForm extends Component {
             placeHolder: "Baggins",
             onChange: handleOnChangeLast,
             value: lastName,
-            errorMessage: classUserContentError[1].last,
-            showError:
-              this.state.validations.display?.length > 0
-                ? isThisALastName_
-                : false,
+            errorMessage: userContentErrors[1].lastError,
+            showError: notValid ? lastNameError : notValid,
           }}
         />
         <ClassTextInput
@@ -240,11 +169,8 @@ export class ClassForm extends Component {
             placeHolder: "bilbo-baggins@adventurehobbits.net",
             onChange: handleOnChangeEmail,
             value: email,
-            errorMessage: classUserContentError[2].email,
-            showError:
-              this.state.validations.display?.length > 0
-                ? isThisAEmail_
-                : false,
+            errorMessage: userContentErrors[2].emailError,
+            showError: notValid ? emailError : notValid,
           }}
         />
         <ClassTextInput
@@ -255,9 +181,8 @@ export class ClassForm extends Component {
             placeHolder: "Hobbiton",
             onChange: handleOnChangeCity,
             value: city,
-            errorMessage: classUserContentError[3].city,
-            showError:
-              this.state.validations.display?.length > 0 ? isThisACity_ : false,
+            errorMessage: userContentErrors[3].cityError,
+            showError: notValid ? cityError : notValid,
           }}
         />
 
@@ -311,10 +236,8 @@ export class ClassForm extends Component {
         </div>
 
         <DisplayErrorMessage
-          message={classUserContentError[4].number}
-          show={
-            this.state.validations.display?.length > 0 ? isThisAPhone_ : false
-          }
+          message={userContentErrors[4].numberError}
+          show={notValid ? phoneError : notValid}
         />
 
         <input type="submit" value="Submit" />
